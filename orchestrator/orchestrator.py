@@ -94,7 +94,14 @@ class SmartOrchestrator:
             
         await self.run_llm_analysis(report)
         self.rdb.set("sys:current_stage", "Finished")
-        await self.nc.close()
+        
+        # Безопасное закрытие NATS соединения на Windows
+        try:
+            await self.nc.flush()
+            await self.nc.close()
+        except Exception:
+            pass
+        print("[System] Оркестратор успешно завершил работу.")
 
 if __name__ == "__main__":
     orchestrator = SmartOrchestrator()
