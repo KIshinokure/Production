@@ -1,0 +1,71 @@
+version: '3.8'
+
+services:
+  nats:
+    image: nats:latest
+    container_name: nats-broker
+    ports:
+      - "4222:4222"
+    networks:
+      - production-net
+
+  agent-dispatcher:
+    build: ./agent
+    container_name: agent-dispatcher
+    environment:
+      - AGENT_TYPE=dispatcher
+      - NATS_URL=nats://nats:4222
+    depends_on:
+      - nats
+    networks:
+      - production-net
+
+  agent-inventory:
+    build: ./agent
+    container_name: agent-inventory
+    environment:
+      - AGENT_TYPE=inventory
+      - NATS_URL=nats://nats:4222
+    depends_on:
+      - nats
+    networks:
+      - production-net
+
+  agent-planner:
+    build: ./agent
+    container_name: agent-planner
+    environment:
+      - AGENT_TYPE=planner
+      - NATS_URL=nats://nats:4222
+    depends_on:
+      - nats
+    networks:
+      - production-net
+
+  agent-quality:
+    build: ./agent
+    container_name: agent-quality
+    environment:
+      - AGENT_TYPE=quality
+      - NATS_URL=nats://nats:4222
+    depends_on:
+      - nats
+    networks:
+      - production-net
+
+  orchestrator:
+    build: ./orchestrator
+    container_name: python-orchestrator
+    environment:
+      - NATS_URL=nats://nats:4222
+    depends_on:
+      - agent-dispatcher
+      - agent-inventory
+      - agent-planner
+      - agent-quality
+    networks:
+      - production-net
+
+networks:
+  production-net:
+    driver: bridge

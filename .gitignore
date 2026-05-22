@@ -1,0 +1,9 @@
+bin/
+dist/
+*.exe
+*.dll
+.go/
+__pycache__/
+*.pyc
+.dockerignore
+.env
