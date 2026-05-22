@@ -1,16 +1,10 @@
-FROM golang:1.21-alpine AS builder
+﻿FROM golang:1.21-alpine AS builder
 WORKDIR /app
-
-COPY go.mod go.sum ./
+COPY go.mod ./
 RUN go mod download
+COPY main.go ./
+RUN CGO_ENABLED=0 GOOS=linux go build -o /production-agent main.go
 
-COPY . .
-
-RUN go mod tidy
-RUN CGO_ENABLED=0 GOOS=linux go build -o main main.go
-
-# Используем тот же образ, который уже есть на компьютере
-FROM golang:1.21-alpine
-WORKDIR /root/
-COPY --from=builder /app/main .
-CMD ["./main"]
+FROM alpine:latest
+COPY --from=builder /production-agent /production-agent
+CMD ["/production-agent"]

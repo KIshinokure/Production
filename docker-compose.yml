@@ -17,3 +17,83 @@ services:
     ports:
       - "16686:16686"
       - "4317:4317"
+
+  ollama:
+    image: ollama/ollama:latest
+    container_name: ollama
+    ports:
+      - "11434:11434"
+
+  agent-dispatcher:
+    build: ./agent
+    environment:
+      - AGENT_TYPE=dispatcher
+      - NATS_URL=nats://nats:4222
+      - REDIS_HOST=redis:6379
+      - JAEGER_HOST=jaeger:4317
+    depends_on:
+      - nats
+      - redis
+      - jaeger
+
+  agent-inventory:
+    build: ./agent
+    environment:
+      - AGENT_TYPE=inventory
+      - NATS_URL=nats://nats:4222
+      - REDIS_HOST=redis:6379
+      - JAEGER_HOST=jaeger:4317
+    depends_on:
+      - nats
+      - redis
+      - jaeger
+
+  agent-planner:
+    build: ./agent
+    environment:
+      - AGENT_TYPE=planner
+      - NATS_URL=nats://nats:4222
+      - REDIS_HOST=redis:6379
+      - JAEGER_HOST=jaeger:4317
+    depends_on:
+      - nats
+      - redis
+      - jaeger
+
+  agent-quality:
+    build: ./agent
+    environment:
+      - AGENT_TYPE=quality
+      - NATS_URL=nats://nats:4222
+      - REDIS_HOST=redis:6379
+      - JAEGER_HOST=jaeger:4317
+    depends_on:
+      - nats
+      - redis
+      - jaeger
+
+  orchestrator:
+    build: ./orchestrator
+    environment:
+      - NATS_URL=nats://nats:4222
+      - REDIS_HOST=redis
+      - JAEGER_HOST=jaeger:4317
+    depends_on:
+      - nats
+      - redis
+      - agent-dispatcher
+      - agent-inventory
+      - agent-planner
+      - agent-quality
+      - ollama
+
+  ui:
+    build:
+      context: .
+      dockerfile: ./ui/Dockerfile
+    ports:
+      - "8501:8501"
+    environment:
+      - REDIS_HOST=redis
+    depends_on:
+      - redis
